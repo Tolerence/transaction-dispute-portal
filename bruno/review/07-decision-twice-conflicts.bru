@@ -1,0 +1,32 @@
+meta {
+  name: Deciding a closed dispute again is a conflict
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/review/disputes/{{reviewDisputeId}}/decision
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{reviewerToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "decision": "REJECT",
+    "note": "Trying to change a decision that is already final."
+  }
+}
+
+tests {
+  test("returns 409", function () {
+    expect(res.status).to.equal(409);
+  });
+}

@@ -1,0 +1,37 @@
+meta {
+  name: Customer submits a dispute for review
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/{{transactionId}}/disputes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "reason": "DUPLICATE_CHARGE",
+    "description": "Charged twice for the same purchase on the same day."
+  }
+}
+
+script:post-response {
+  bru.setVar("reviewDisputeId", res.body.id);
+}
+
+tests {
+  test("dispute is created as SUBMITTED", function () {
+    expect(res.status).to.equal(201);
+    expect(res.body.status).to.equal("SUBMITTED");
+  });
+}

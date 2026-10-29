@@ -1,0 +1,84 @@
+# Production-safe defaults. Anything secret or environment-specific is required from the environment;
+# the application refuses to start when it is missing. Local development settings live in application-dev.yml.
+spring:
+  application:
+    name: dispute-portal
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100
+  mvc:
+    problemdetails:
+      enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-message: never
+
+logging:
+  structured:
+    format:
+      # Single-line JSON logs (Elastic Common Schema) for log aggregation.
+      console: ecs
+
+app:
+  security:
+    # OIDC issuer of the bank's identity provider, e.g. https://login.example.com/realms/bank.
+    # Required outside the dev profile.
+    issuer-uri: ${OIDC_ISSUER_URI:}
+    # Tokens must list this value in their "aud" claim.
+    audience: ${APP_AUDIENCE:dispute-portal-api}
+    # Where signing keys are fetched from. Set when the API reaches the identity provider on a different
+    # address than the one that appears in token "iss" claims (typical in containers). Empty = discovery.
+    jwk-set-uri: ${OIDC_JWK_SET_URI:}
+  rate-limit:
+    # Requests per minute per client address, for all of /api/**.
+    api-per-minute: ${RATE_LIMIT_API_PER_MINUTE:120}
+    # Dispute submissions per minute per client address.
+    dispute-submit-per-minute: ${RATE_LIMIT_DISPUTE_PER_MINUTE:10}
+    # Use the first X-Forwarded-For address as the client address. Enable only behind a proxy you control.
+    trust-forwarded-for: ${TRUST_FORWARDED_FOR:false}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  disputes:
+    # Days after the booking date during which a transaction may be disputed.
+    window-days: 120
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: dispute-portal
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# API documentation is off by default. dev and demo turn it on.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

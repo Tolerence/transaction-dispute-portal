@@ -1,0 +1,26 @@
+meta {
+  name: Filter transactions (POSTED, date range)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/transactions?status=POSTED&from=2026-10-01&to=2026-10-31&sort=bookedAt,desc
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("every returned transaction matches the filters", function () {
+    expect(res.status).to.equal(200);
+    res.body.content.forEach(function (tx) {
+      expect(tx.status).to.equal("POSTED");
+      expect(tx.bookedAt.slice(0, 10) >= "2026-10-01").to.be.true;
+      expect(tx.bookedAt.slice(0, 10) <= "2026-10-31").to.be.true;
+    });
+  });
+}
