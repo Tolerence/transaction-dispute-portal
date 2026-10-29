@@ -1,0 +1,11 @@
+# Demo data with real OIDC validation (used with the local Keycloak realm in infra/keycloak).
+# Unlike dev, there is no local signing key and no dev token endpoint. Never use with real customer data.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

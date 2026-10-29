@@ -1,0 +1,21 @@
+# Local development only. Enables demo seed data, the dev token endpoint and local defaults.
+# Never activate this profile in a shared or production environment.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/dispute_portal}
+    username: ${DB_USER:dispute}
+    password: ${DB_PASSWORD:dispute}
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev
+
+app:
+  security:
+    jwt-secret: ${JWT_SECRET:local-development-only-secret-key-change-me-32b}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

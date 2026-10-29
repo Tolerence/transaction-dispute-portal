@@ -1,0 +1,26 @@
+meta {
+  name: Customer sees the decision without reviewer identity
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/disputes/{{reviewDisputeId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("reviewer actions appear as BANK and the reviewer ID is absent", function () {
+    expect(res.status).to.equal(200);
+    const actors = res.body.events.map(function (e) { return e.actor; });
+    expect(actors).to.include("BANK");
+    expect(actors).to.include("CUSTOMER");
+    expect(JSON.stringify(res.body)).to.not.include(bru.getEnvVar("reviewerId"));
+    expect(res.body.customerId).to.be.undefined;
+  });
+}

@@ -1,0 +1,118 @@
+{
+  "realm": "dispute-portal",
+  "enabled": true,
+  "displayName": "Dispute Portal (local)",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "failureFactor": 5,
+  "permanentLockout": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 900,
+  "ssoSessionMaxLifespan": 28800,
+  "passwordPolicy": "length(12) and notUsername",
+  "clients": [
+    {
+      "clientId": "dispute-portal-web",
+      "name": "Dispute portal SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/callback",
+        "http://localhost:5173/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:8080",
+        "http://localhost:5173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:8080/login##http://localhost:5173/login"
+      },
+      "protocolMappers": [
+        {
+          "name": "dispute-portal-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "dispute-portal-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "dispute-portal-tests",
+      "name": "Automated API tests (Bruno/CI only)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "dispute-portal-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "dispute-portal-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "6f1c2b7e-4d1a-4c8e-9a2b-000000000001",
+      "username": "demo.customer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Customer",
+      "email": "demo.customer@example.test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "id": "6f1c2b7e-4d1a-4c8e-9a2b-000000000003",
+      "username": "ops.reviewer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ops",
+      "lastName": "Reviewer",
+      "email": "ops.reviewer@example.test",
+      "realmRoles": [
+        "DISPUTE_REVIEWER"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "reviewer-password",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "DISPUTE_REVIEWER",
+        "description": "Operations staff who review and decide disputes"
+      }
+    ]
+  }
+}

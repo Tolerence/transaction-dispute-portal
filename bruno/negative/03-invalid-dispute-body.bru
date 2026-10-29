@@ -1,0 +1,33 @@
+meta {
+  name: Invalid dispute body returns field errors
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/transactions/{{transactionId}}/disputes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "reason": "OTHER",
+    "description": "short"
+  }
+}
+
+tests {
+  test("returns 400 with an errors map", function () {
+    expect(res.status).to.equal(400);
+    expect(res.body.errors.description).to.be.a("string");
+  });
+}

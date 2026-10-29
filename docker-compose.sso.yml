@@ -1,0 +1,20 @@
+# Adds a local Keycloak and runs the API with the demo profile (real OIDC token validation).
+# Use with the base file:  docker compose -f docker-compose.yml -f docker-compose.sso.yml up -d --wait
+# Kept as a separate file so SSO never depends on whatever SPRING_PROFILES_ACTIVE is set in .env.
+services:
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+
+  keycloak:
+    # Local identity provider. Realm and users are for testing only; see infra/keycloak/README.md.
+    image: quay.io/keycloak/keycloak:26.0
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_HOSTNAME: http://localhost:8180
+    volumes:
+      - ./infra/keycloak/realm-dispute-portal.json:/opt/keycloak/data/import/realm-dispute-portal.json:ro
+    ports:
+      - "8180:8080"

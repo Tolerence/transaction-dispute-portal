@@ -1,0 +1,23 @@
+meta {
+  name: Withdraw dispute
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/disputes/{{disputeId}}/withdraw
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("withdraws the open dispute and records the event", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.status).to.equal("WITHDRAWN");
+    expect(res.body.closedAt).to.be.a("string");
+  });
+}
