@@ -35,39 +35,59 @@ export function LoginPage() {
     }
   }
 
+  const hasAnyOption = isOidcConfigured() || devLoginEnabled;
+
   return (
-    <main className="login">
-      <h1>Transaction Disputes</h1>
-      <p>View your transactions and raise a dispute if something looks wrong.</p>
+    <main className="auth">
+      <section className="auth-hero" aria-labelledby="auth-title">
+        <span className="brand-mark" aria-hidden="true">TD</span>
+        <h2 id="auth-title">Your money, with a clear way to challenge it.</h2>
+        <p>Review every transaction on your account and raise a dispute when something looks wrong.</p>
+        <ul className="feature-list">
+          <li>See every transaction, filtered by status and date</li>
+          <li>Raise a dispute in a few guided steps</li>
+          <li>Follow each case in a transparent audit timeline</li>
+        </ul>
+      </section>
 
-      {isOidcConfigured() && (
-        <button type="button" onClick={signInWithProvider} disabled={busy}>
-          {busy ? 'Redirecting…' : 'Sign in'}
-        </button>
-      )}
+      <section className="auth-card" aria-label="Sign in">
+        <h1>Welcome back</h1>
+        <p className="muted">Sign in to continue to your transactions.</p>
 
-      {devLoginEnabled && (
-        <button type="button" className="secondary" onClick={() => signInAsDemoCustomer(DEMO_CUSTOMER_ID)} disabled={busy}>
-          Sign in as demo customer (local only)
-        </button>
-      )}
+        {isOidcConfigured() && (
+          <button type="button" onClick={signInWithProvider} disabled={busy}>
+            {busy ? 'Redirecting…' : 'Sign in'}
+          </button>
+        )}
 
-      {devLoginEnabled && (
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => signInAsDemoCustomer(DEMO_REVIEWER_ID, ['DISPUTE_REVIEWER'])}
-          disabled={busy}
-        >
-          Sign in as demo reviewer (local only)
-        </button>
-      )}
+        {devLoginEnabled && (
+          <>
+            {isOidcConfigured() && (
+              <div className="auth-divider">or</div>
+            )}
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => signInAsDemoCustomer(DEMO_CUSTOMER_ID)}
+              disabled={busy}
+            >
+              Sign in as demo customer (local only)
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => signInAsDemoCustomer(DEMO_REVIEWER_ID, ['DISPUTE_REVIEWER'])}
+              disabled={busy}
+            >
+              Sign in as demo reviewer (local only)
+            </button>
+          </>
+        )}
 
-      {!isOidcConfigured() && !devLoginEnabled && (
-        <p className="muted">Sign-in is not configured for this build.</p>
-      )}
+        {!hasAnyOption && <p className="muted">Sign-in is not configured for this build.</p>}
 
-      {error && <p role="alert" className="error">{error}</p>}
+        {error && <p role="alert">{error}</p>}
+      </section>
     </main>
   );
 }

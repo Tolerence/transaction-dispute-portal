@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { TransactionStatus } from '../api/types';
+import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
 import { StatusBadge } from '../components/StatusBadge';
+import { TableSkeleton } from '../components/Skeleton';
 import { formatDate, formatMoney } from '../format';
 import { useAsync } from '../hooks/useAsync';
 
@@ -29,7 +31,11 @@ export function TransactionsPage() {
 
   return (
     <section>
-      <h1>Transactions</h1>
+      <PageHeader
+        eyebrow="Account activity"
+        title="Transactions"
+        description="Everything posted to your account. Open a transaction to raise a dispute."
+      />
 
       <div className="filters">
         <label>
@@ -51,10 +57,15 @@ export function TransactionsPage() {
         </label>
       </div>
 
-      {error && <p role="alert" className="error">{error}</p>}
-      {loading && !data && <p>Loading transactions…</p>}
+      {error && <p role="alert">{error}</p>}
+      {loading && !data && <TableSkeleton columns={5} />}
 
-      {data && data.content.length === 0 && <p className="muted">No transactions match these filters.</p>}
+      {data && data.content.length === 0 && (
+        <div className="empty-state">
+          <strong>No transactions match these filters</strong>
+          <span>Try widening the date range or clearing the status.</span>
+        </div>
+      )}
 
       {data && data.content.length > 0 && (
         <>

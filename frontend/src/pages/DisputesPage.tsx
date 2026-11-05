@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { DisputeStatus } from '../api/types';
+import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
 import { StatusBadge } from '../components/StatusBadge';
+import { TableSkeleton } from '../components/Skeleton';
 import { formatDate, formatMoney, humanise } from '../format';
 import { useAsync } from '../hooks/useAsync';
 
@@ -21,8 +23,11 @@ export function DisputesPage() {
 
   return (
     <section>
-      <h1>Dispute history</h1>
-      <p className="muted">Every dispute you have raised, including closed and withdrawn cases.</p>
+      <PageHeader
+        eyebrow="Your cases"
+        title="Dispute history"
+        description="Every dispute you have raised, including closed and withdrawn cases."
+      />
 
       <div className="filters">
         <label>
@@ -44,13 +49,16 @@ export function DisputesPage() {
         </label>
       </div>
 
-      {error && <p role="alert" className="error">{error}</p>}
-      {loading && !data && <p>Loading disputes…</p>}
+      {error && <p role="alert">{error}</p>}
+      {loading && !data && <TableSkeleton columns={6} />}
 
       {data && data.content.length === 0 && (
-        <p className="muted">
-          No disputes yet. You can raise one from any <Link to="/transactions">transaction</Link>.
-        </p>
+        <div className="empty-state">
+          <strong>No disputes yet</strong>
+          <span>
+            You can raise one from any <Link to="/transactions">transaction</Link>.
+          </span>
+        </div>
       )}
 
       {data && data.content.length > 0 && (

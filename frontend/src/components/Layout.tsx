@@ -11,18 +11,27 @@ export function Layout() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <header className="topbar">
-        <span className="brand">Transaction Disputes</span>
-        <nav>
+        <NavLink to="/transactions" className="brand" aria-label="Transaction Disputes home">
+          <span className="brand-mark" aria-hidden="true">TD</span>
+          <span>Transaction Disputes</span>
+        </NavLink>
+        <nav className="topnav" aria-label="Main">
           <NavLink to="/transactions">Transactions</NavLink>
           <NavLink to="/disputes">Dispute history</NavLink>
           {isReviewer() && <NavLink to="/review">Review queue</NavLink>}
         </nav>
-        <button type="button" className="link" onClick={signOut}>
-          Sign out
-        </button>
+        <div className="topbar-actions">
+          {isReviewer() && <span className="role-chip">Reviewer</span>}
+          <button type="button" className="ghost" onClick={signOut}>
+            Sign out
+          </button>
+        </div>
       </header>
-      <main className="content">
+      <main id="main" className="content" tabIndex={-1}>
         <Outlet />
       </main>
     </div>

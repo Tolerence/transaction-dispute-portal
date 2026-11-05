@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { DisputeStatus } from '../api/types';
+import { PageHeader } from '../components/PageHeader';
 import { Pagination } from '../components/Pagination';
 import { StatusBadge } from '../components/StatusBadge';
+import { TableSkeleton } from '../components/Skeleton';
 import { formatDate, formatMoney, humanise } from '../format';
 import { useAsync } from '../hooks/useAsync';
 
@@ -22,8 +24,11 @@ export function ReviewQueuePage() {
 
   return (
     <section>
-      <h1>Review queue</h1>
-      <p className="muted">Disputes raised by customers. Oldest first by default.</p>
+      <PageHeader
+        eyebrow="Reviewer workspace"
+        title="Review queue"
+        description="Disputes raised by customers. Oldest first by default, so the longest-waiting cases come first."
+      />
 
       <div className="filters">
         <label>
@@ -45,10 +50,15 @@ export function ReviewQueuePage() {
         </label>
       </div>
 
-      {error && <p role="alert" className="error">{error}</p>}
-      {loading && !data && <p>Loading queue…</p>}
+      {error && <p role="alert">{error}</p>}
+      {loading && !data && <TableSkeleton columns={6} />}
 
-      {data && data.content.length === 0 && <p className="muted">Nothing in the queue for this status.</p>}
+      {data && data.content.length === 0 && (
+        <div className="empty-state">
+          <strong>Nothing in the queue</strong>
+          <span>There are no disputes with this status right now.</span>
+        </div>
+      )}
 
       {data && data.content.length > 0 && (
         <>
