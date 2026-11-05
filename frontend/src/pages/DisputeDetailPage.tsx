@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ApiError, api } from '../api/client';
+import { DetailSkeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import { formatDateTime, formatMoney, humanise } from '../format';
 import { useAsync } from '../hooks/useAsync';
@@ -13,7 +14,7 @@ export function DisputeDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [withdrawing, setWithdrawing] = useState(false);
 
-  if (loading && !dispute) return <p>Loading dispute…</p>;
+  if (loading && !dispute) return <DetailSkeleton />;
   if (error || !dispute) {
     return (
       <section>
@@ -41,7 +42,7 @@ export function DisputeDetailPage() {
 
   return (
     <section>
-      <Link to="/disputes">← Back to dispute history</Link>
+      <Link className="back-link" to="/disputes">← Back to dispute history</Link>
       <h1>Dispute for {dispute.transaction.merchantName}</h1>
       <p>
         <StatusBadge status={dispute.status} />

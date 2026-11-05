@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, api } from '../api/client';
 import type { DisputeReason } from '../api/types';
+import { DetailSkeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import { DESCRIPTION_MAX, DISPUTE_REASONS, DisputeFormErrors, validateDispute } from '../disputes/validation';
 import { formatDateTime, formatMoney, humanise } from '../format';
@@ -12,7 +13,7 @@ export function TransactionDetailPage() {
   const transactionId = Number(id);
   const { data: tx, error, loading } = useAsync(() => api.getTransaction(transactionId), [transactionId]);
 
-  if (loading && !tx) return <p>Loading transaction…</p>;
+  if (loading && !tx) return <DetailSkeleton />;
   if (error || !tx) {
     return (
       <section>
@@ -24,7 +25,7 @@ export function TransactionDetailPage() {
 
   return (
     <section>
-      <Link to="/transactions">← Back to transactions</Link>
+      <Link className="back-link" to="/transactions">← Back to transactions</Link>
       <h1>{tx.merchantName}</h1>
 
       <dl className="details">

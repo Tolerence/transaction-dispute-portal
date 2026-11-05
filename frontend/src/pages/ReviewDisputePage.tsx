@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ApiError, api } from '../api/client';
 import type { Dispute, ReviewDecision } from '../api/types';
+import { DetailSkeleton } from '../components/Skeleton';
 import { StatusBadge } from '../components/StatusBadge';
 import { REVIEW_NOTE_MAX, validateReviewNote } from '../disputes/validation';
 import { formatDateTime, formatMoney, humanise } from '../format';
@@ -17,7 +18,7 @@ export function ReviewDisputePage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (loading && !dispute) return <p>Loading dispute…</p>;
+  if (loading && !dispute) return <DetailSkeleton />;
   if (error || !dispute) {
     return (
       <section>
@@ -42,7 +43,7 @@ export function ReviewDisputePage() {
 
   return (
     <section>
-      <Link to="/review">← Back to queue</Link>
+      <Link className="back-link" to="/review">← Back to queue</Link>
       <h1>Dispute for {dispute.transaction.merchantName}</h1>
       <p>
         <StatusBadge status={dispute.status} />

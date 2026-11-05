@@ -4,6 +4,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react()],
+  // Read VITE_* settings from the repository root .env, the single place the stack is configured.
+  envDir: '..',
   server: {
     port: 5173,
     proxy: {
