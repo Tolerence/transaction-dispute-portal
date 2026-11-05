@@ -46,7 +46,7 @@ test-frontend: ## Frontend type-check, unit tests and production build
 
 .PHONY: test-api
 test-api: ## API tests against the running dev stack (Bruno)
-	cd bruno && npx --yes @usebruno/cli@latest run --env Docker -r
+	./scripts/reset-api-test-state.sh && cd bruno && npx --yes @usebruno/cli@latest run --env Docker -r
 
 .PHONY: test-api-sso
 test-api-sso: ## API tests against the running SSO stack (Bruno, real OIDC tokens)
