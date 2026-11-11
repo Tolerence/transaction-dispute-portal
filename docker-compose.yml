@@ -41,10 +41,6 @@ services:
       - "8080:8080"
     build:
       context: ./frontend
-      args:
-        VITE_OIDC_ISSUER: ${VITE_OIDC_ISSUER:-http://localhost:8180/realms/dispute-portal}
-        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-dispute-portal-web}
-        VITE_DEV_LOGIN: ${VITE_DEV_LOGIN:-false}
     environment:
       OIDC_ORIGIN: ${OIDC_ORIGIN:-http://localhost:8180}
     depends_on:

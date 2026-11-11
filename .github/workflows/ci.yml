@@ -51,12 +51,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create .env with generated secrets
-        run: ./scripts/bootstrap-env.sh
-      - run: docker compose up -d --build --wait
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Create .env with generated secrets
+        run: ./scripts/bootstrap-env.sh
+      - name: Build API jar and web bundle (images package these)
+        run: make build
+      - run: docker compose up -d --build --wait
       - name: Bruno API tests (dev stack)
         working-directory: bruno
         run: npx --yes @usebruno/cli@latest run --env Docker -r

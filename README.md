@@ -19,16 +19,16 @@ disputes, including closed and withdrawn cases. Each dispute has an audit timeli
 | Tool | Version | Used for |
 | --- | --- | --- |
 | Docker (Desktop or Engine with Compose v2) | recent | Running the stack |
-| JDK | 25 | Backend build and tests (optional if you only use Docker) |
-| Maven | 3.9+ | Backend build and tests (optional if you only use Docker) |
-| Node.js | 22 | Frontend build and tests, Bruno CLI (optional if you only use Docker) |
+| JDK | 25 | `make build` compiles the API on your machine |
+| Maven | 3.9+ | `make build` and `make test-backend` |
+| Node.js | 22 | `make build` builds the web app; also Bruno CLI |
 | openssl, perl | any | `make env` generates secrets |
 
 Check your setup:
 
 ```bash
 docker --version && docker compose version
-java -version        # expect 25.x (only for building outside Docker)
+java -version        # expect 25.x
 mvn -v | head -1     # expect 3.9+
 node -v              # expect v22.x
 ```
@@ -46,7 +46,8 @@ make up
 This command:
 
 1. creates `.env` from `.env.example` and generates the database password, JWT signing key, and Keycloak admin password (existing values are never overwritten);
-2. builds and starts PostgreSQL, the API, and the web app, and waits until all are healthy.
+2. runs `make build`, which compiles the API jar and the web bundle on your machine (Maven and npm);
+3. builds the Docker images from those artifacts and starts PostgreSQL, the API, and the web app, and waits until all are healthy.
 
 Open **http://localhost:8080** and choose **Sign in as demo customer (local only)**. The dev profile seeds eight transactions and three historical disputes for the demo customer.
 
@@ -64,13 +65,16 @@ Stop the stack with `make down` (keeps data) or `make reset` (deletes the databa
 
 ## 3. Build
 
+Docker images do not compile anything. The API and the web app are built on your machine, then packaged into images. This keeps Maven and npm downloads on your own network, where your trust settings apply, and keeps the project free of certificates.
+
 | Artifact | Command | Output |
 | --- | --- | --- |
-| Backend jar | `cd backend && mvn -B package` | `backend/target/dispute-portal-backend-0.1.0.jar` |
-| Frontend bundle | `cd frontend && npm ci && npm run build` | `frontend/dist/` |
-| Backend image | `docker build -t dispute-portal-backend ./backend` | Multi-stage, Java 25 JRE, non-root user, layered jar, health check |
-| Frontend image | `docker build -t dispute-portal-frontend ./frontend` | Static build served by unprivileged nginx on port 8080 |
-| Full stack | `make up` or `docker compose up -d --build --wait` | All services |
+| Backend jar and web bundle | `make build` | `backend/target/dispute-portal-backend-0.1.0.jar` and `frontend/dist/` |
+| Backend image | `docker compose build backend` (after `make build`) | Java 25 JRE, non-root user, layered jar, health check |
+| Frontend image | `docker compose build frontend` (after `make build`) | `dist/` served by unprivileged nginx on port 8080 |
+| Full stack | `make up` (runs `make build`, then Compose) | All services |
+
+The web settings (`VITE_*` in `.env`) are compiled into the bundle. After changing them, run `make build` again before `make up`.
 
 ---
 
@@ -104,6 +108,23 @@ The profiles behave differently on purpose:
 - **dev** enables `/api/dev/token` and a local signing key. Never deploy it.
 - **demo** validates real tokens but ships a public demo user. Never deploy it.
 - **production** (no profile) has neither, and refuses to start without `OIDC_ISSUER_URI`.
+
+### Demo credentials (public, local only)
+
+The values below are committed to this repository on purpose. They exist so anyone can run the portal locally and in tests. They are not secrets, and they must never protect a real system.
+
+| Where | Value | Purpose |
+| --- | --- | --- |
+| Dev database fallback (`application-dev.yml`) | user `dispute`, password `dispute` | Used only when `DB_PASSWORD` is unset. `make up` sets a generated one in `.env` |
+| Dev JWT fallback (`application-dev.yml`) | `local-development-only-secret-key-change-me-32b` | Used only when `JWT_SECRET` is unset. `make env` generates one in `.env` |
+| Keycloak demo users (`infra/keycloak/README.md`) | `demo.customer` / `demo-password`, `ops.reviewer` / `reviewer-password` | Sign-in in the demo (SSO) profile and the Bruno tests |
+| Keycloak test client (`dispute-portal-tests`) | Resource owner password grant | Used only by the Bruno API tests |
+
+Rules:
+
+- **Only the values above are public.** Real secrets are generated into `.env` by `make env` (database password, JWT secret, Keycloak admin password). `.env` is git-ignored and must never be committed or copied to a server.
+- **Production uses none of these.** The production profile has no dev token endpoint, no demo users, and refuses to start without `OIDC_ISSUER_URI`. Remove the Keycloak test client and demo users from any production realm.
+- **Changing a demo value** is only needed if you expose the local stack beyond your laptop, which you should not do.
 
 ---
 
@@ -244,6 +265,8 @@ Dispute reasons: `UNAUTHORISED_TRANSACTION`, `DUPLICATE_CHARGE`, `INCORRECT_AMOU
 | Sign-in works but every API call returns 401 | The API was started without the demo profile, so it checks tokens against the local dev key | Use `make up-sso`, which sets the profile in `docker-compose.sso.yml` |
 | Dispute submission fails with 403 "Invalid CORS request" | The web origin is not in `CORS_ALLOWED_ORIGINS`. Browsers send `Origin` even on same-origin POSTs | Add the origin to `.env` (local default covers `localhost:8080` and `localhost:5173`) |
 | Browser still shows an old version after a rebuild | Cached JavaScript bundle | Reload with cache disabled, or open a new tab |
+| Docker build fails with `not found` for `dispute-portal-backend-*.jar` or `dist/` | `make build` has not run since the last clean, or it failed | Run `make build` and fix any Maven or npm error it prints |
+| `make build` fails with `PKIX path building failed` | Your network inspects HTTPS and its root certificate is not in your machine's trust store | Install the root in your system keychain, or build on a network without inspection. The project does not carry certificates |
 | Port 8080, 8180, or 5432 already in use | Another process | Stop it, or change the port mapping in `docker-compose.yml` |
 
 View logs with `make logs`. Log lines are JSON; search by `requestId` to follow one request across services.

@@ -5,6 +5,13 @@ SHELL := /bin/bash
 COMPOSE := docker compose
 COMPOSE_SSO := docker compose -f docker-compose.yml -f docker-compose.sso.yml
 
+# Web app settings are compiled into the bundle, so the build reads them from .env (same defaults as compose).
+-include .env
+VITE_OIDC_ISSUER ?= http://localhost:8180/realms/dispute-portal
+VITE_OIDC_CLIENT_ID ?= dispute-portal-web
+VITE_DEV_LOGIN ?= false
+export VITE_OIDC_ISSUER VITE_OIDC_CLIENT_ID VITE_DEV_LOGIN
+
 .PHONY: help
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -13,12 +20,20 @@ help: ## List available targets
 env: ## Create .env and generate local secrets (never overwrites values)
 	./scripts/bootstrap-env.sh
 
+.PHONY: build
+build: ## Build the API jar and web bundle on this machine (Maven and npm; no Docker, no certificates)
+	cd backend && mvn -B -DskipTests package
+	cd frontend && npm ci --no-audit --no-fund && npm run build
+
+# Sub-makes re-read .env, which `env` may have just created.
 .PHONY: up
 up: env ## Start the local stack: database, API (dev profile) and web app, on http://localhost:8080
+	$(MAKE) build
 	$(COMPOSE) up -d --build --wait
 
 .PHONY: up-sso
 up-sso: env ## Start the stack with a local Keycloak and real OIDC validation (demo profile), on http://localhost:8080
+	$(MAKE) build
 	$(COMPOSE_SSO) up -d --build --wait
 
 .PHONY: down

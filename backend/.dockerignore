@@ -1,6 +1,9 @@
-target/
 .idea/
 .vscode/
 .git/
 .env
 .env.*
+
+# Only the built API jar is sent to Docker. Maven's other build output stays out of the image context.
+target/*
+!target/dispute-portal-backend-*.jar

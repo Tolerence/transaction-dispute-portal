@@ -17,4 +17,10 @@ frontend/node_modules/
 !.env.example
 *.pem
 *.key
+*.p12
+*.jks
 
+# Word documents and Word lock files (for example "~$" owner files): never commit
+*.docx
+*.doc
+~$*
