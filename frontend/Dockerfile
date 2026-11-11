@@ -8,5 +8,7 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 ENV OIDC_ORIGIN=http://localhost:8180
 COPY dist/ /usr/share/nginx/html
+# Numeric UID of the nginx user in the base image. Stated here so the image is non-root in the Dockerfile itself.
+USER 101
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --retries=5 CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1
