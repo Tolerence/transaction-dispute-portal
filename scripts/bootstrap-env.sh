@@ -16,7 +16,9 @@ fill() {  # fill KEY GENERATOR_COMMAND  (adds the key if the file predates it)
   if grep -qE "^${key}=$" .env; then
     local value
     value="$(eval "$cmd")"
-    perl -0pi -e "s/^${key}=\$/${key}=${value}/m" .env
+    # Pass the value through the environment: base64 secrets contain "/", which would end a
+    # sed or perl substitution written with the value inline.
+    FILL_VALUE="$value" perl -0pi -e "s/^${key}=\$/${key}=\$ENV{FILL_VALUE}/m" .env
     echo "Generated ${key}"
   fi
 }
