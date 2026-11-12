@@ -89,6 +89,6 @@ Production must use managed backups with point-in-time recovery, and the same re
 
 ## Known limits
 
-- Alerts are shown in Alertmanager but are not sent anywhere until a receiver is added in `infra/monitoring/alertmanager/alertmanager.yml`.
+- Alerts are emailed to Mailpit (http://127.0.0.1:8026), a local catcher. Nothing reaches a real inbox. To send real email, see `infra/monitoring/alertmanager/alertmanager.email.example.yml`.
 - Container CPU and memory are not monitored on Docker Desktop for Mac.
 - Metrics and logs are kept on the local machine only. They are lost on `make reset`.

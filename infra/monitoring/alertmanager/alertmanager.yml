@@ -1,18 +1,21 @@
-# Where firing alerts are sent. The default receiver only keeps them visible in the Alertmanager UI
-# (http://127.0.0.1:9093). To notify someone, add a receiver, for example:
+# Alert routing. Alerts are emailed to Mailpit, a local mail catcher. Open http://127.0.0.1:8026 to read them.
+# Nothing is sent to the internet from this file.
 #
-#   receivers:
-#     - name: team
-#       slack_configs:
-#         - api_url: https://hooks.slack.com/services/...   # keep the real URL out of git
-#           channel: '#dispute-portal-alerts'
-#
-# and point the route at it with "receiver: team".
+# To send real email later, copy alertmanager.email.example.yml over this file and set up the app password
+# described there. Or point the receiver at another SMTP relay (SendGrid, Mailgun, Amazon SES).
 route:
-  receiver: default
+  receiver: email
   group_by: [alertname, severity]
   group_wait: 30s
   repeat_interval: 4h
 
 receivers:
-  - name: default
+  - name: email
+    email_configs:
+      - to: "eliyamaraks@gmail.com"
+        from: "alerts@dispute-portal.local"
+        smarthost: mailpit:1025
+        require_tls: false
+        send_resolved: true
+        headers:
+          Subject: "[dispute-portal] {{ .Status | toUpper }} {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"

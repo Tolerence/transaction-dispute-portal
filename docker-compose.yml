@@ -99,8 +99,20 @@ services:
     depends_on:
       - db
 
+  mailpit:
+    # Local mail catcher for alert emails. Nothing is sent to the internet. Inbox: http://127.0.0.1:8026
+    profiles: ["monitoring"]
+    image: axllent/mailpit:v1.21.8
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "127.0.0.1:8026:8025"
+
   alertmanager:
-    # Shows firing alerts at http://127.0.0.1:9093. Add email, Slack or Teams in infra/monitoring/alertmanager/alertmanager.yml.
+    # Shows firing alerts at http://127.0.0.1:9093. Alert emails go to Mailpit (see infra/monitoring/alertmanager).
     profiles: ["monitoring"]
     image: prom/alertmanager:v0.27.0
     command:
@@ -109,6 +121,8 @@ services:
       - ./infra/monitoring/alertmanager:/etc/alertmanager:ro
     ports:
       - "127.0.0.1:9093:9093"
+    depends_on:
+      - mailpit
 
   grafana:
     profiles: ["monitoring"]

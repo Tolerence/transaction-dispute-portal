@@ -81,7 +81,7 @@ Open **http://127.0.0.1:3000** and log in as `admin` with `GRAFANA_ADMIN_PASSWOR
 - **Browser errors:** errors reported by the web app, by source.
 - **Logs:** backend ERROR lines, browser error reports, and the dispute review audit trail. Use a `requestId` from a log line to find the matching request.
 
-Alerts are defined in `infra/monitoring/prometheus/alerts.yml` and shown at **http://127.0.0.1:9093** (Alertmanager). They are not sent anywhere yet: add a receiver in `infra/monitoring/alertmanager/alertmanager.yml` to get email or Slack notifications.
+Alerts are defined in `infra/monitoring/prometheus/alerts.yml` and shown at **http://127.0.0.1:9093** (Alertmanager). They are emailed to `eliyamaraks@gmail.com` through a local mail catcher, Mailpit, which you can read at **http://127.0.0.1:8026**. Nothing leaves your machine. To send real email, follow `infra/monitoring/alertmanager/alertmanager.email.example.yml`.
 
 Container CPU and memory are not shown. cAdvisor cannot name containers on Docker Desktop for Mac, so those panels would be unlabelled. Use a Linux host to add them.
 
