@@ -24,3 +24,7 @@ frontend/node_modules/
 *.docx
 *.doc
 ~$*
+
+# Database backups (contain customer data) and Alertmanager secrets
+backups/
+infra/monitoring/alertmanager/secrets/

@@ -1,0 +1,27 @@
+# Email alerts. To use it:
+#   1. Create a Gmail app password (Google account > Security > 2-Step Verification > App passwords).
+#      Do not use your normal Gmail password.
+#   2. Save the app password, with no trailing newline, to:
+#        infra/monitoring/alertmanager/secrets/smtp_password   (gitignored)
+#   3. Copy this file over alertmanager.yml, fill in the two addresses below, and run: make up-monitoring
+#
+# Gmail accepts SMTP on port 587 with STARTTLS. Alertmanager refuses to start if the password file is missing,
+# so do not switch to this file until step 2 is done.
+route:
+  receiver: email
+  group_by: [alertname, severity]
+  group_wait: 30s
+  repeat_interval: 4h
+
+receivers:
+  - name: email
+    email_configs:
+      - to: "YOUR_ADDRESS@gmail.com"
+        from: "YOUR_ADDRESS@gmail.com"
+        smarthost: smtp.gmail.com:587
+        auth_username: "YOUR_ADDRESS@gmail.com"
+        auth_password_file: /etc/alertmanager/secrets/smtp_password
+        require_tls: true
+        send_resolved: true
+        headers:
+          Subject: "[dispute-portal] {{ .Status | toUpper }} {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})"

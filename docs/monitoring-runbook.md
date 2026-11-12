@@ -74,13 +74,18 @@ This is a business signal, not a fault. Check **Waiting for action now** and tel
 
 ## Backup note
 
-The database lives in the `db-data` Docker volume. The local stack has no backups. Before any change that could lose data, run:
+The database lives in the `db-data` Docker volume. Before any change that could lose data, run:
 
 ```bash
-docker compose exec -T db pg_dump -U dispute dispute_portal > backup-$(date +%Y%m%d).sql
+make backup          # writes backups/dispute_portal-<timestamp>.sql.gz
+make restore-drill   # restores the newest backup into a scratch database and compares row counts
 ```
 
-Production must use managed backups with point-in-time recovery. Do not rely on this command there.
+`make restore-drill` never touches the live database. It drops its scratch database when it finishes, and it exits non-zero if any table's row count differs. Run it after every backup change, and before relying on a backup.
+
+Backups contain customer data. The `backups/` folder is gitignored, so keep it off shared drives.
+
+Production must use managed backups with point-in-time recovery, and the same restore drill should run against them. Do not rely on these scripts there.
 
 ## Known limits
 

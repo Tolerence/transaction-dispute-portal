@@ -72,5 +72,13 @@ test-api: ## API tests against the running dev stack (Bruno)
 test-api-sso: ## API tests against the running SSO stack (Bruno, real OIDC tokens)
 	cd bruno && npx --yes @usebruno/cli@latest run --env Sso -r
 
+.PHONY: backup
+backup: ## Dump the database to backups/ (gzipped SQL; the stack must be running)
+	./scripts/backup-db.sh
+
+.PHONY: restore-drill
+restore-drill: ## Restore the newest backup into a scratch database and compare row counts
+	./scripts/restore-drill.sh
+
 .PHONY: check
 check: test test-api ## Everything: unit, integration, and API tests (stack must be running)
