@@ -1,0 +1,22 @@
+meta {
+  name: Responses carry a request ID
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/transactions?page=0&size=1
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+tests {
+  test("echoes or assigns X-Request-Id", function () {
+    expect(res.status).to.equal(200);
+    expect(res.headers["x-request-id"]).to.be.a("string");
+  });
+}

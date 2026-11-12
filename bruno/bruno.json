@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "Transaction Disputes API",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}
