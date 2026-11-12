@@ -33,7 +33,8 @@ up: env ## Start the local stack: database, API (dev profile) and web app, on ht
 
 .PHONY: up-sso
 up-sso: env ## Start the stack with a local Keycloak and real OIDC validation (demo profile), on http://localhost:8080
-	$(MAKE) build
+	# The SSO API has no dev token endpoint, so the local-only demo buttons are left out of this build.
+	$(MAKE) build VITE_DEV_LOGIN=false
 	$(COMPOSE_SSO) up -d --build --wait
 
 .PHONY: up-monitoring
