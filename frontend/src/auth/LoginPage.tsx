@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ApiError, api } from '../api/client';
-import { DEMO_CUSTOMER_ID, DEMO_REVIEWER_ID, devLoginEnabled } from '../api/config';
+import { DEMO_CUSTOMER_ID, DEMO_REVIEWER_ID, devLoginEnabled, ssoLoginHints } from '../api/config';
 import { useNavigate } from 'react-router-dom';
 import { setToken } from './session';
 import { beginLogin, isOidcConfigured } from './oidc';
@@ -17,11 +17,11 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function signInWithProvider() {
+  async function signInWithProvider(loginHint?: string) {
     setBusy(true);
     setError(null);
     try {
-      await beginLogin();
+      await beginLogin(loginHint || undefined);
     } catch (err) {
       setBusy(false);
       setError(err instanceof Error ? err.message : 'Sign-in is unavailable. Please try again later.');
@@ -79,9 +79,24 @@ export function LoginPage() {
           </div>
 
           {isOidcConfigured() && (
-            <button type="button" className="login-primary" onClick={signInWithProvider} disabled={busy}>
-              {busy ? 'Redirecting…' : 'Sign in'}
-            </button>
+            <div className="sso-options">
+              <button
+                type="button"
+                className="login-primary"
+                onClick={() => signInWithProvider(ssoLoginHints.customer)}
+                disabled={busy}
+              >
+                {busy ? 'Redirecting…' : 'Sign in as customer'}
+              </button>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => signInWithProvider(ssoLoginHints.reviewer)}
+                disabled={busy}
+              >
+                Sign in as reviewer
+              </button>
+            </div>
           )}
 
           {devLoginEnabled && (

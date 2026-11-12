@@ -381,3 +381,8 @@
     padding: 1.5rem;
   }
 }
+
+.sso-options {
+  display: grid;
+  gap: 0.75rem;
+}

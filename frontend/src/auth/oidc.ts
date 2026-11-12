@@ -63,8 +63,11 @@ function redirectUri(): string {
   return `${window.location.origin}/callback`;
 }
 
-/** Starts the sign-in redirect. */
-export async function beginLogin(): Promise<void> {
+/**
+ * Starts the sign-in redirect. loginHint pre-fills the username on the provider's login page; the role comes
+ * from the account the user signs in with, not from this hint.
+ */
+export async function beginLogin(loginHint?: string): Promise<void> {
   const { authorization_endpoint: authorizeUrl } = await discover();
   const state = createCodeVerifier();
   const verifier = createCodeVerifier();
@@ -80,6 +83,9 @@ export async function beginLogin(): Promise<void> {
     code_challenge: await createCodeChallenge(verifier),
     code_challenge_method: 'S256',
   });
+  if (loginHint) {
+    params.set('login_hint', loginHint);
+  }
   window.location.assign(`${authorizeUrl}?${params.toString()}`);
 }
 

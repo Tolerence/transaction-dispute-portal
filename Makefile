@@ -34,7 +34,8 @@ up: env ## Start the local stack: database, API (dev profile) and web app, on ht
 .PHONY: up-sso
 up-sso: env ## Start the stack with a local Keycloak and real OIDC validation (demo profile), on http://localhost:8080
 	# The SSO API has no dev token endpoint, so the local-only demo buttons are left out of this build.
-	$(MAKE) build VITE_DEV_LOGIN=false
+	# The two sign-in buttons pre-fill the local Keycloak demo users (see infra/keycloak/README.md).
+	$(MAKE) build VITE_DEV_LOGIN=false VITE_SSO_CUSTOMER_HINT=demo.customer VITE_SSO_REVIEWER_HINT=ops.reviewer
 	$(COMPOSE_SSO) up -d --build --wait
 
 .PHONY: up-monitoring
