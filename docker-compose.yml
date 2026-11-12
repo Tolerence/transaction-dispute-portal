@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:16-alpine
+    mem_limit: 512m
     environment:
       POSTGRES_DB: dispute_portal
       POSTGRES_USER: dispute
@@ -16,6 +17,7 @@ services:
   backend:
     build:
       context: ./backend
+    mem_limit: 768m
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       DB_URL: jdbc:postgresql://db:5432/dispute_portal
@@ -41,6 +43,7 @@ services:
       - "8080:8080"
     build:
       context: ./frontend
+    mem_limit: 128m
     environment:
       OIDC_ORIGIN: ${OIDC_ORIGIN:-http://localhost:8180}
     depends_on:
