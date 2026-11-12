@@ -18,6 +18,8 @@ public interface DisputeRepository extends JpaRepository<Dispute, Long>, JpaSpec
 
     boolean existsByTransactionIdAndStatusIn(Long transactionId, Collection<DisputeStatus> statuses);
 
+    long countByStatusIn(Collection<DisputeStatus> statuses);
+
     @EntityGraph(attributePaths = "transaction")
     Optional<Dispute> findByIdAndCustomerId(Long id, String customerId);
 

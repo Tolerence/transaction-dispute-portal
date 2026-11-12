@@ -18,14 +18,17 @@ public class DisputeService {
     private final DisputeRepository disputes;
     private final DisputeEventRepository events;
     private final DisputePolicy policy;
+    private final DisputeMetrics metrics;
     private final Clock clock;
 
     public DisputeService(TransactionRepository transactions, DisputeRepository disputes,
-                          DisputeEventRepository events, DisputePolicy policy, Clock clock) {
+                          DisputeEventRepository events, DisputePolicy policy, DisputeMetrics metrics,
+                          Clock clock) {
         this.transactions = transactions;
         this.disputes = disputes;
         this.events = events;
         this.policy = policy;
+        this.metrics = metrics;
         this.clock = clock;
     }
 
@@ -38,6 +41,7 @@ public class DisputeService {
         boolean hasOpenDispute = disputes.existsByTransactionIdAndStatusIn(transaction.getId(), DisputeStatus.OPEN);
         policy.ineligibilityReason(transaction, hasOpenDispute, now)
                 .ifPresent(reason -> {
+                    metrics.submissionRejected();
                     throw BusinessException.unprocessable(reason);
                 });
 
@@ -46,6 +50,7 @@ public class DisputeService {
         disputes.save(dispute);
         DisputeEvent submitted = events.save(
                 new DisputeEvent(dispute, null, DisputeStatus.SUBMITTED, customerId, null, now));
+        metrics.submitted();
         return DisputeResponse.customerView(dispute, List.of(submitted));
     }
 
@@ -67,6 +72,7 @@ public class DisputeService {
         DisputeEvent event = dispute.transitionTo(DisputeStatus.WITHDRAWN, customerId,
                 "Withdrawn by customer", OffsetDateTime.now(clock));
         events.save(event);
+        metrics.withdrawn();
         return DisputeResponse.customerView(dispute, events.findByDisputeIdOrderByCreatedAtAscIdAsc(disputeId));
     }
 

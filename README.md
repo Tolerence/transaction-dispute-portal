@@ -71,9 +71,21 @@ Optional. Starts Prometheus (metrics), Loki and Grafana Alloy (container logs) a
 make up-monitoring
 ```
 
-Open **http://127.0.0.1:3000** and log in as `admin` with `GRAFANA_ADMIN_PASSWORD` from `.env`. The **Dispute Portal API** dashboard shows the backend scrape state, the 5xx share, 429 volume, p95 latency and the backend's ERROR log lines. Prometheus alert rules are in `infra/monitoring/prometheus/alerts.yml`. Use the request ID in a log line to find the matching request. Stop everything with `make down`; `make reset` also deletes monitoring data.
+Open **http://127.0.0.1:3000** and log in as `admin` with `GRAFANA_ADMIN_PASSWORD` from `.env`. The **Dispute Portal API** dashboard has these sections:
 
-Grafana, Prometheus and Loki are bound to `127.0.0.1` or the Compose network only. Alloy reads container logs through the Docker socket (read-only), which grants host-level Docker access, so use this stack on a developer machine only.
+- **Service health:** scrape state for the API and Postgres, 5xx share, rate-limited requests, p95 latency, browser errors.
+- **Traffic and errors:** requests per second by status, p95 latency by endpoint.
+- **Disputes (business):** submissions, refusals by the rules, withdrawals, reviews started, blocked self-reviews, open disputes, decisions.
+- **JVM (API process):** heap, GC pauses, threads, CPU.
+- **Database:** API connection pool, Postgres connections, commits and size.
+- **Browser errors:** errors reported by the web app, by source.
+- **Logs:** backend ERROR lines, browser error reports, and the dispute review audit trail. Use a `requestId` from a log line to find the matching request.
+
+Alerts are defined in `infra/monitoring/prometheus/alerts.yml` and shown at **http://127.0.0.1:9093** (Alertmanager). They are not sent anywhere yet: add a receiver in `infra/monitoring/alertmanager/alertmanager.yml` to get email or Slack notifications.
+
+Container CPU and memory are not shown. cAdvisor cannot name containers on Docker Desktop for Mac, so those panels would be unlabelled. Use a Linux host to add them.
+
+Grafana, Prometheus, Loki and Alertmanager are bound to `127.0.0.1` or the Compose network only. Alloy reads container logs through the Docker socket (read-only), which grants host-level Docker access, so use this stack on a developer machine only.
 
 ## 3. Build
 

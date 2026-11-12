@@ -21,11 +21,14 @@ public class DisputeReviewService {
 
     private final DisputeRepository disputes;
     private final DisputeEventRepository events;
+    private final DisputeMetrics metrics;
     private final Clock clock;
 
-    public DisputeReviewService(DisputeRepository disputes, DisputeEventRepository events, Clock clock) {
+    public DisputeReviewService(DisputeRepository disputes, DisputeEventRepository events,
+                                DisputeMetrics metrics, Clock clock) {
         this.disputes = disputes;
         this.events = events;
+        this.metrics = metrics;
         this.clock = clock;
     }
 
@@ -48,6 +51,7 @@ public class DisputeReviewService {
         OffsetDateTime now = OffsetDateTime.now(clock);
         DisputeEvent event = dispute.transitionTo(DisputeStatus.UNDER_REVIEW, reviewerId, null, now);
         events.save(event);
+        metrics.reviewStarted();
         AUDIT.info("action=start_review disputeId={} reviewer={} from={} to={}",
                 disputeId, reviewerId, event.getFromStatus(), event.getToStatus());
         return reviewerResponse(dispute, disputeId);
@@ -60,6 +64,7 @@ public class DisputeReviewService {
         OffsetDateTime now = OffsetDateTime.now(clock);
         DisputeEvent event = dispute.transitionTo(target, reviewerId, note.strip(), now);
         events.save(event);
+        metrics.decided(target);
         AUDIT.info("action=decide disputeId={} reviewer={} decision={} from={} to={}",
                 disputeId, reviewerId, decision, event.getFromStatus(), event.getToStatus());
         return reviewerResponse(dispute, disputeId);
@@ -69,6 +74,7 @@ public class DisputeReviewService {
         Dispute dispute = disputes.findForUpdate(disputeId)
                 .orElseThrow(() -> BusinessException.notFound("Dispute not found"));
         if (dispute.getCustomerId().equals(reviewerId)) {
+            metrics.selfReviewBlocked();
             AUDIT.warn("action=self_review_blocked disputeId={} reviewer={}", disputeId, reviewerId);
             throw BusinessException.forbidden("Reviewers cannot review their own disputes");
         }

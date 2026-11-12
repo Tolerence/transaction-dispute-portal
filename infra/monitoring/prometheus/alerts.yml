@@ -30,3 +30,47 @@ groups:
           severity: warning
         annotations:
           summary: "API p95 latency above 1 second for 10 minutes"
+
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Postgres exporter cannot reach the database"
+          description: "The API will fail too. Check the db container with docker compose logs db."
+
+      - alert: DatabasePoolExhausted
+        expr: hikaricp_connections_pending{pool="HikariPool-1"} > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Requests are waiting for a database connection"
+          description: "The connection pool is full. Look at the Database row on the dashboard for slow queries."
+
+      - alert: HighHeapUsage
+        expr: |
+          sum(jvm_memory_used_bytes{application="dispute-portal",area="heap"})
+            / sum(jvm_memory_max_bytes{application="dispute-portal",area="heap"}) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API heap above 90% of its maximum for 5 minutes"
+
+      - alert: FrontendErrorSpike
+        expr: sum(increase(frontend_errors_total[15m])) > 10
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 10 browser errors in 15 minutes"
+          description: "Check the client.error lines in the Backend logs panel for the route and message."
+
+      - alert: DisputeBacklogGrowing
+        expr: disputes_open > 50
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "More than 50 disputes have been waiting for action for 30 minutes"

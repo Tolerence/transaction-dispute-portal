@@ -87,6 +87,26 @@ services:
     depends_on:
       - loki
 
+  postgres-exporter:
+    # Database metrics (connections, size, commits) for the Database panels.
+    profiles: ["monitoring"]
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    environment:
+      DATA_SOURCE_NAME: postgresql://dispute:${DB_PASSWORD}@db:5432/dispute_portal?sslmode=disable
+    depends_on:
+      - db
+
+  alertmanager:
+    # Shows firing alerts at http://127.0.0.1:9093. Add email, Slack or Teams in infra/monitoring/alertmanager/alertmanager.yml.
+    profiles: ["monitoring"]
+    image: prom/alertmanager:v0.27.0
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    volumes:
+      - ./infra/monitoring/alertmanager:/etc/alertmanager:ro
+    ports:
+      - "127.0.0.1:9093:9093"
+
   grafana:
     profiles: ["monitoring"]
     image: grafana/grafana:11.2.0

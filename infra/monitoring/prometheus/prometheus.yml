@@ -1,4 +1,5 @@
-# Scrapes the API over the internal Docker network. The backend publishes no host port.
+# Scrapes services over the internal Docker network. Only Grafana, Prometheus and Alertmanager publish ports,
+# on 127.0.0.1.
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -6,8 +7,17 @@ global:
 rule_files:
   - /etc/prometheus/alerts.yml
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["alertmanager:9093"]
+
 scrape_configs:
   - job_name: dispute-portal
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ["backend:8080"]
+
+  - job_name: postgres
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
