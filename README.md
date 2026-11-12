@@ -63,6 +63,18 @@ Stop the stack with `make down` (keeps data) or `make reset` (deletes the databa
 
 ---
 
+### Monitoring (local Grafana)
+
+Optional. Starts Prometheus (metrics), Loki and Grafana Alloy (container logs) and Grafana, on top of the normal stack:
+
+```bash
+make up-monitoring
+```
+
+Open **http://127.0.0.1:3000** and log in as `admin` with `GRAFANA_ADMIN_PASSWORD` from `.env`. The **Dispute Portal API** dashboard shows the backend scrape state, the 5xx share, 429 volume, p95 latency and the backend's ERROR log lines. Prometheus alert rules are in `infra/monitoring/prometheus/alerts.yml`. Use the request ID in a log line to find the matching request. Stop everything with `make down`; `make reset` also deletes monitoring data.
+
+Grafana, Prometheus and Loki are bound to `127.0.0.1` or the Compose network only. Alloy reads container logs through the Docker socket (read-only), which grants host-level Docker access, so use this stack on a developer machine only.
+
 ## 3. Build
 
 Docker images do not compile anything. The API and the web app are built on your machine, then packaged into images. This keeps Maven and npm downloads on your own network, where your trust settings apply, and keeps the project free of certificates.
@@ -176,7 +188,7 @@ Checklist before the first production deployment. Items marked **bank** need you
 4. **Database:** run Flyway migrations from the release pipeline with a least-privilege migration user, and run the application with a separate user limited to DML.
 5. **TLS:** terminate TLS at the ingress or load balancer. Set `TRUST_FORWARDED_FOR=true` only if that proxy overwrites the header.
 6. **Images:** pin base images by digest, sign images, and deploy only images that pass the Trivy scan in CI.
-7. **Observability:** ship the JSON logs (ECS) to your log platform. Scrape `/actuator/prometheus` from inside the cluster only. Alert on `http.server.requests` error rates and on 429 volume.
+7. **Observability:** ship the JSON logs (ECS) to your log platform. Scrape `/actuator/prometheus` from inside the cluster only; the endpoint has no token, so never route the API port publicly. Alert on `http.server.requests` error rates and on 429 volume. For local use, see [Monitoring](#monitoring-local-grafana).
 8. **Rate limits:** the per-instance limits are a backstop. Add shared limits at the gateway (**bank**).
 9. **Data:** agree retention for dispute descriptions, which can contain personal data (**bank**, privacy impact assessment).
 10. **Security review:** penetration test and threat model before go-live (**bank**).
@@ -246,7 +258,7 @@ Controls:
 | POST | `/api/review/disputes/{id}/decision` | **Reviewer.** Body: `{ "decision": "ACCEPT" or "REJECT", "note" }`. Note is 10 to 500 characters and is shown to the customer. Allowed only from `UNDER_REVIEW` |
 | POST | `/api/dev/token` | **dev profile only.** Local token for a customer ID, optionally with `roles` (for example `DISPUTE_REVIEWER`) |
 | GET | `/actuator/health/readiness` | Readiness probe |
-| GET | `/actuator/prometheus` | Metrics (restrict at the network layer) |
+| GET | `/actuator/prometheus` | Metrics. Open without a token, so the API port must stay private: the backend publishes no host port and nginx does not proxy `/actuator` |
 | GET | `/v3/api-docs`, `/swagger-ui/index.html` | OpenAPI document and Swagger UI. **dev and demo profiles only** (404 in production) |
 
 Dispute reasons: `UNAUTHORISED_TRANSACTION`, `DUPLICATE_CHARGE`, `INCORRECT_AMOUNT`, `NOT_AS_DESCRIBED`, `SERVICE_CANCELLED`, `OTHER`.

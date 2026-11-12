@@ -71,6 +71,10 @@ management:
   metrics:
     tags:
       application: dispute-portal
+    distribution:
+      # Histogram buckets for request latency, so Prometheus can compute p95 with histogram_quantile.
+      percentiles-histogram:
+        http.server.requests: true
   endpoint:
     health:
       probes:

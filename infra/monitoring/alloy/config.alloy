@@ -1,0 +1,36 @@
+// Collects stdout/stderr of every Docker Compose service in this project and sends it to Loki.
+// Backend lines are ECS JSON and include the requestId, so a log line can be matched to a failing request.
+
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "compose_services" {
+  targets = discovery.docker.containers.targets
+
+  // Only this project's containers. The project name is the repository folder name, so change this
+  // value if the folder is renamed. Other Compose projects on the same machine are ignored.
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "transaction-dispute-portal"
+    action        = "keep"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.compose_services.output
+  labels     = { job = "docker" }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

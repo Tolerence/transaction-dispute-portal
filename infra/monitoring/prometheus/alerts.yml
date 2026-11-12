@@ -1,0 +1,32 @@
+groups:
+  - name: dispute-portal
+    rules:
+      - alert: BackendDown
+        expr: up{job="dispute-portal"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dispute portal API is not answering metric scrapes"
+          description: "Prometheus cannot scrape backend:8080 for 1 minute. Check the backend container logs in Loki or with docker compose logs backend."
+
+      - alert: HighServerErrorRate
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="dispute-portal",status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_server_requests_seconds_count{application="dispute-portal"}[5m])), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 5% of API requests return 5xx"
+          description: "Look up the matching ERROR lines in the Loki log panel of the Dispute Portal dashboard."
+
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_server_requests_seconds_bucket{application="dispute-portal",uri!~"/actuator.*"}[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "API p95 latency above 1 second for 10 minutes"

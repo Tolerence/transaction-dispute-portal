@@ -47,5 +47,65 @@ services:
       backend:
         condition: service_healthy
 
+  # ---- Monitoring (opt-in: make up-monitoring) -------------------------------------------------
+  # Grafana UI on http://127.0.0.1:3000. Prometheus and Loki are reachable only inside the Compose network,
+  # except Prometheus on 127.0.0.1:9090 for troubleshooting.
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:v2.54.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./infra/monitoring/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - backend
+
+  loki:
+    profiles: ["monitoring"]
+    image: grafana/loki:3.1.1
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./infra/monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+
+  alloy:
+    # Reads container logs through the Docker socket (read-only) and forwards them to Loki.
+    profiles: ["monitoring"]
+    image: grafana/alloy:v1.3.1
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./infra/monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+
+  grafana:
+    profiles: ["monitoring"]
+    image: grafana/grafana:11.2.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    volumes:
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+
 volumes:
   db-data:
+  prometheus-data:
+  loki-data:
+  grafana-data:

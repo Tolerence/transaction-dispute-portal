@@ -36,17 +36,22 @@ up-sso: env ## Start the stack with a local Keycloak and real OIDC validation (d
 	$(MAKE) build
 	$(COMPOSE_SSO) up -d --build --wait
 
+.PHONY: up-monitoring
+up-monitoring: env ## Start the stack plus Grafana, Prometheus, Loki and Alloy (Grafana on http://127.0.0.1:3000)
+	$(MAKE) build
+	$(COMPOSE) --profile monitoring up -d --build --wait
+
 .PHONY: down
-down: ## Stop the stack (keeps data)
-	$(COMPOSE_SSO) down
+down: ## Stop the stack and any monitoring containers (keeps data)
+	$(COMPOSE_SSO) --profile monitoring down
 
 .PHONY: reset
-reset: ## Stop the stack and delete its database volume
-	$(COMPOSE_SSO) down -v
+reset: ## Stop the stack and delete all its volumes, including monitoring data
+	$(COMPOSE_SSO) --profile monitoring down -v
 
 .PHONY: logs
 logs: ## Follow logs for all services
-	$(COMPOSE_SSO) logs -f
+	$(COMPOSE_SSO) --profile monitoring logs -f
 
 .PHONY: test
 test: test-backend test-frontend ## Unit and integration tests for backend and frontend

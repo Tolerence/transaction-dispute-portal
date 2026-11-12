@@ -26,4 +26,5 @@ fill() {  # fill KEY GENERATOR_COMMAND  (adds the key if the file predates it)
 fill DB_PASSWORD 'openssl rand -hex 16'
 fill JWT_SECRET 'openssl rand -base64 48 | tr -d "\n"'
 fill KEYCLOAK_ADMIN_PASSWORD 'openssl rand -hex 16'
+fill GRAFANA_ADMIN_PASSWORD 'openssl rand -hex 16'
 echo ".env is ready. Review it before first use."

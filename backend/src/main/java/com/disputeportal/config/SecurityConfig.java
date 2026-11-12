@@ -30,6 +30,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health/**").permitAll()
+                        // Metrics are reachable only on the internal Docker network: the backend publishes no host
+                        // port and nginx does not proxy /actuator. Do not expose the backend port publicly.
+                        .requestMatchers("/actuator/prometheus").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/dev/token").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/review/**").hasRole("DISPUTE_REVIEWER")
